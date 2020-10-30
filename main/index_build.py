@@ -122,8 +122,56 @@ def splitIntoSortedChunks(entryfile):
 
 # TODO
 # Add your code here.
+generateAllIndexEntries('raw_entries')
+splitIntoSortedChunks('raw_entries')
+
+ # Converts two ints into the filename format
+temp_name_gen = lambda a,b: 'temp_' + str(a) + '_' + str(b)
+
+def mergeFiles(a,b,c):
+    file_one_name, file_two_name = temp_name_gen(a,b), temp_name_gen(b,c)
+    input_file_one, input_file_two = BufferedInput(file_one_name, 0.3), BufferedInput(file_two_name, 0.3)
+    file_one, file_two = (file_one_name, input_file_one), (file_two_name, input_file_two)
+    current_line_one, current_line_two = input_file_one.readln(), input_file_two.readln()
+
+    output_file = BufferedOutput(temp_name_gen(a,c), 0.3 * 2)
+    
+    while True:
+        if current_line_one == None: tear_down(*file_one, *file_two, output_file); break
+        if current_line_two == None: tear_down(*file_two, *file_one, output_file); break 
+            
+        if  current_line_one < current_line_two:
+            output_file.writeln(current_line_one)
+            current_line_one = input_file_one.readln()
+        if  current_line_one > current_line_two:
+            output_file.writeln(current_line_one)
+            current_line_two  = input_file_two.readln()
+        else: 
+            output_file.writeln(current_line_one)
+            current_line_one = input_file_one.readln()
+            current_line_two  = input_file_two.readln()
+
+def tear_down(empty_name,empty_file, other_name, other_file, output_file):
+    empty_file.close()
+    os.remove(empty_name)
+
+    current_line = other_file.readln()
+
+    while current_line != None:
+        output_file.writeln(current_line)
+        current_line = other_file.readln()
+
+    other_file.close()
+    os.remove(other_name)
+    output_file.flush()
+
+def mergeFilesInRange(a,c):
+    if a + 2 == c: return
+    mergeFiles(a, a + 1, a + 2)
+    mergeFilesInRange(a+1, c)
 
 
+mergeFilesInRange(0,2)
 # Putting it all together:
 
 def sortRawEntries(entryfile):
