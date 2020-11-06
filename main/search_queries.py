@@ -1,5 +1,5 @@
-
 # Inf2-IADS Coursework 1, October 2020
+
 # Python source file: search_queries.py
 # Author: John Longley
 
@@ -57,7 +57,53 @@ class ItemStream:
 # TODO
 # Add your code here.
 
+# Building index
+index_build.buildIndex()
+test = index_build.generateMetaIndex('sample_index.txt')
 
+class HitStream:
+    def __init__(self, itemStreams: [ItemStream], lineWindow: int, minRequired: int):
+        self.itemStreams = itemStreams
+        self.numSearchTerms = len(itemStreams)
+        self.lineWindow = lineWindow if lineWindow >= 1 \
+                                     else Exception("Line Window is less than 1")
+        self.minRequired = minRequired if self.numSearchTerms >= minRequired \
+                                       else Exception("More search terms than min")
+
+    def next(self):
+        for item in self.itemStreams:
+            entry = item.pop()  
+            
+            while entry != None:
+                search = self.checkOccurances(*entry, item)
+                if search != None: return (entry,search)
+                entry = item.pop()
+            print('\n')
+    
+    def checkOccurances(self, code, lineNum, item: ItemStream):
+        lines_to_check = list(range(lineNum, lineNum + self.lineWindow - 1))
+        entry = item.pop()
+        numOccurances = 0
+        while entry != None:
+            if entry[0] == code and entry[1] in lines_to_check: numOccurances += 1
+            if numOccurances >= self.minRequired: break
+            entry = item.pop()
+        return entry
+
+def create_query(words_to_find):
+    query = []
+    for i in words_to_find:
+        a = index_build.indexEntryFor(i)
+        query.append(ItemStream(a))
+    return query
+    
+test_words  = ['above', 'song', 'catch']
+
+query = create_query(test_words)
+
+H = HitStream(query, 1000, 1)
+print(H.next())
+print(H.next())
 # Displaying hits as corpus quotations:
 
 import linecache
@@ -92,7 +138,7 @@ currHitStream = None
 currLineWindow = 0
 
 def advancedSearch(keys,lineWindow,minRequired,numberOfHits=5):
-    indexEntries = [index_build.indexEntryFor(k) for k in keys]
+    index_build.indexEntries = [index_build.indexEntryFor(k) for k in keys]
     if not all(indexEntries):
         message = "Words absent from index:  "
         for i in range(0,len(keys)):

@@ -262,4 +262,4 @@ def indexEntryFor(key):
         raise Exception('Wrong key in index line.')
 
 # End of file
-buildIndex()
+#buildIndex()
