@@ -10,7 +10,7 @@
 # PART B: PROCESSING SEARCH QUERIES
 
 import index_build
-
+import copy
 # We find hits for queries using the index entries for the search terms.
 # Since index entries for common words may be large, we don't want to
 # process the entire index entry before commencing a search.
@@ -72,23 +72,39 @@ class HitStream:
 
     def next(self):
         for item in self.itemStreams:
-            entry = item.pop()  
-            
+            self.current_item = item
+            try:
+                entries = item.pop()
+            except:
+                return None
+            entry = copy.deepcopy(entries)
+            #print(entry)
             while entry != None:
                 search = self.checkOccurances(*entry, item)
-                if search != None: return (entry,search)
+                if search: return entry#,search)
                 entry = item.pop()
-            print('\n')
     
     def checkOccurances(self, code, lineNum, item: ItemStream):
-        lines_to_check = list(range(lineNum, lineNum + self.lineWindow - 1))
-        entry = item.pop()
-        numOccurances = 0
+        lines_to_check = list(range(lineNum, lineNum + self.lineWindow - 1)) # Need to check for distinct
+        numUniqueOccurances = 0
+        for i in self.itemStreams:
+            if self.findUnique(i, code, lines_to_check): numUniqueOccurances += 1
+            if numUniqueOccurances >= self.minRequired - 1: return True # Since first item is implicitly counted
+        return False
+    
+    def findUnique(self, item, code, lines_to_check):
+        # Checks if next search term is found
+        entries = copy.deepcopy(item) 
+        try:
+            entry = entries.pop()
+        except:
+            return False
+
         while entry != None:
-            if entry[0] == code and entry[1] in lines_to_check: numOccurances += 1
-            if numOccurances >= self.minRequired: break
-            entry = item.pop()
-        return entry
+            if entry[0] == code and entry[1] in lines_to_check: 
+                return True
+            entry = entries.pop()
+        return False
 
 def create_query(words_to_find):
     query = []
@@ -97,13 +113,18 @@ def create_query(words_to_find):
         query.append(ItemStream(a))
     return query
     
-test_words  = ['above', 'song', 'catch']
+test_words  = ['woke','where']
 
 query = create_query(test_words)
+lineWindow = 1
+minRequired = 1
+numHits = 3
 
-H = HitStream(query, 1000, 1)
-print(H.next())
-print(H.next())
+H = HitStream(query, lineWindow, minRequired)
+print(test_words)
+for i in range(0,numHits):
+    print(H.next())
+
 # Displaying hits as corpus quotations:
 
 import linecache
@@ -138,7 +159,7 @@ currHitStream = None
 currLineWindow = 0
 
 def advancedSearch(keys,lineWindow,minRequired,numberOfHits=5):
-    index_build.indexEntries = [index_build.indexEntryFor(k) for k in keys]
+    indexEntries = [index_build.indexEntryFor(k) for k in keys]
     if not all(indexEntries):
         message = "Words absent from index:  "
         for i in range(0,len(keys)):
@@ -161,3 +182,4 @@ def more(numberOfHits=5):
     displayHits(currHitStream,numberOfHits,currLineWindow)
 
 # End of file
+print(advancedSearch(test_words,lineWindow,minRequired,numberOfHits = numHits))
