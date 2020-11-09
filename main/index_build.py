@@ -164,11 +164,6 @@ def tear_down(empty_name, empty_file, other_name, other_file, current_line, outp
     os.remove(other_name)
     output_file.flush()
 
-def mergeFilesInRange2(a,c):
-    mergeFiles(0,1,2)
-    mergeFiles(0,2,3)
-    return temp_name_gen(a,c)
-
 def mergeFilesInRange(a,c):
     if a < (c - 1):
         q = (a + c) // 2
@@ -269,5 +264,8 @@ def indexEntryFor(key):
     else:
         raise Exception('Wrong key in index line.')
 
+# Testing code
+test = False
+if test:
+    buildIndex()
 # End of file
-#buildIndex()

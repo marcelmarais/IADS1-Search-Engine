@@ -55,11 +55,8 @@ class ItemStream:
         return e
 
 # TODO
-# Add your book_code here.
 
-# Building index
-index_build.buildIndex()
-test = index_build.generateMetaIndex('index.txt')
+# Build Index
 
 class HitStream:
     def __init__(self, itemStreams: [ItemStream], lineWindow: int, minRequired: int):
@@ -109,26 +106,37 @@ class HitStream:
         if self.numUniqueOccurances >= self.minRequired: return True
         return False
 
+# Testing code
+test = True
+if test:
+    index_build.buildIndex()
+    index_build.generateMetaIndex('index.txt')
 
-def create_query(words_to_find):
-    '''Helps to test '''
-    query = []
-    for i in words_to_find:
-        a = index_build.indexEntryFor(i)
-        query.append(ItemStream(a))
-    return query
+    def create_query(words_to_find):
+        '''Helps to test HitStream'''
+        query = []
+        for i in words_to_find:
+            a = index_build.indexEntryFor(i)
+            query.append(ItemStream(a))
+        return query
     
-test_words  = ['friends','romans','countrymen']
+    test_words  = ['friends','romans','countrymen']
+    lineWindow = 5
+    minRequired = 2
+    numHits = 20
 
-lineWindow = 5
-minRequired = 2
-numHits = 20
-query = create_query(test_words)
+    query = create_query(test_words)
 
-H = HitStream(query, lineWindow, minRequired)
-print(test_words)
-for i in range(0,numHits):
-    print(H.next())
+    H = HitStream(query, lineWindow, minRequired)
+    print(f'\nSearch terms: {test_words}\n')
+    cnt = 0
+    for i in range(0,numHits):
+        hit = H.next()
+        if hit != None:
+            print(hit)
+            cnt += 1
+
+    print(f'\n{cnt} hits were found in {numHits} searches.')
 
 # Displaying hits as corpus quotations:
 
@@ -187,4 +195,3 @@ def more(numberOfHits=5):
     displayHits(currHitStream,numberOfHits,currLineWindow)
 
 # End of file
-print(advancedSearch(test_words,lineWindow,minRequired,numberOfHits = numHits))

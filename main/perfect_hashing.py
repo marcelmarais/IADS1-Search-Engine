@@ -70,7 +70,7 @@ def miniHash(m,j):
 
 # TODO
 # Add your code here.
-
+import copy
 def hashCompress(L,m):
     r = len(L)
     L_with_index = tuple(enumerate(L))
@@ -80,13 +80,13 @@ def hashCompress(L,m):
     R = [0] * r
 
     for index, contents in L_with_index:
-        j = 1
+        j = 0
         done = False
 
         while done == False:
-            checkTable = T.copy()
+            checkTable = T[:]
+            if contents == []: return R
             potential_hash = miniHash(m, j)
-
             for string in contents:
                 curr_string_hash = potential_hash(string)
                 if checkTable[curr_string_hash] == True:
@@ -102,9 +102,7 @@ def hashCompress(L,m):
                     else:
                         continue     
     return R
-L = [['one','two','three'],['four', 'five'],['six'], ['a','b','c','d']]
 
-#hashCompress(L, 11)
 # Putting it all together:
 # compact data structure for representing a perfect hash function
 
@@ -142,16 +140,15 @@ def checkPerfectHasher (keys,H):
         print("Clashes found.")
         return clashes
 
-import index_build
-import itertools
-
-index_build.generateMetaIndex('sample_index.txt')
-MetaIndex = index_build.MetaIndex
-MetaIndex = dict(itertools.islice(MetaIndex.items(), 500))
-#print(MetaIndex)
-
-H = Hasher (MetaIndex.keys(), 5.0, 0.8)
-checkPerfectHasher(MetaIndex, H)
+#Testing code
+test = False
+if test:
+    import index_build
+    index_build.buildIndex()
+    index_build.generateMetaIndex('index.txt')
+    MetaIndex = index_build.MetaIndex
+    H = Hasher (MetaIndex.keys(), 5.0, 0.8)
+    checkPerfectHasher(MetaIndex, H)
 # NOT YET IMPLEMENTED:
 # Reordering the main index so that the index entry for key
 # lives at the line number given by hashWith(C,key)
