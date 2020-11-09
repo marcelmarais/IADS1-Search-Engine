@@ -17,7 +17,7 @@ from buffered_io import *
 CorpusFiles = { 'CAA' : 'Carroll_Alice_in_Wonderland.txt',
                 'DCC' : 'Dickens_Christmas_Carol.txt',
                 'SJH' : 'Stevenson_Jekyll_and_Hyde.txt',
-              # 'SCW' : 'Shakespeare_Complete_Works.txt'
+                'SCW' : 'Shakespeare_Complete_Works.txt'
               # 'TWP' : 'Tolstoy_War_and_Peace.txt'
                }
 # each file should be identified by a three-letter code
@@ -164,13 +164,21 @@ def tear_down(empty_name, empty_file, other_name, other_file, current_line, outp
     os.remove(other_name)
     output_file.flush()
 
-def mergeFilesInRange(a,c):
+def mergeFilesInRange2(a,c):
     mergeFiles(0,1,2)
     mergeFiles(0,2,3)
     return temp_name_gen(a,c)
 
-mergeFilesInRange(0,3)
+def mergeFilesInRange(a,c):
+    if a < (c - 1):
+        q = (a + c) // 2
+    
+        mergeFilesInRange(a,q)
+        mergeFilesInRange(q ,c)
+        mergeFiles(a,q,c)
 
+    return temp_name_gen(a,c)
+    
 def sortRawEntries(entryfile):
     chunks = splitIntoSortedChunks(entryfile)
     outfile = mergeFilesInRange(0,chunks)
