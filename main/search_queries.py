@@ -4,7 +4,7 @@
 # Author: John Longley
 
 # TEMPLATE FILE
-# Please add your code at the point marked: # TODO
+# Please add your book_code at the point marked: # TODO
 
 
 # PART B: PROCESSING SEARCH QUERIES
@@ -55,70 +55,75 @@ class ItemStream:
         return e
 
 # TODO
-# Add your code here.
+# Add your book_code here.
 
 # Building index
 index_build.buildIndex()
-test = index_build.generateMetaIndex('sample_index.txt')
+test = index_build.generateMetaIndex('index.txt')
 
 class HitStream:
     def __init__(self, itemStreams: [ItemStream], lineWindow: int, minRequired: int):
         self.itemStreams = itemStreams
+        self.originalItemStreams = itemStreams
         self.numSearchTerms = len(itemStreams)
-        self.lineWindow = lineWindow if lineWindow >= 1 \
-                                     else Exception("Line Window is less than 1")
-        self.minRequired = minRequired if self.numSearchTerms >= minRequired \
-                                       else Exception("More search terms than min")
+        # Exception Handling
+        if lineWindow < 1:
+            raise ValueError("Line Window is less than 1.")
+        if self.numSearchTerms < minRequired:
+            raise ValueError("Fewer search terms than minRequired.")
+
+        self.lineWindow = lineWindow 
+        self.minRequired = minRequired
+        self.numUniqueOccurances = 0
+        self.hits = []
 
     def next(self):
-        for item in self.itemStreams:
-            self.current_item = item
-            try:
-                entries = item.pop()
-            except:
-                return None
-            entry = copy.deepcopy(entries)
-            #print(entry)
+        items = copy.deepcopy(self.itemStreams)
+        for item in items:
+            entry = item.pop()
             while entry != None:
-                search = self.checkOccurances(*entry, item)
-                if search: return entry#,search)
-                entry = item.pop()
-    
-    def checkOccurances(self, code, lineNum, item: ItemStream):
-        lines_to_check = list(range(lineNum, lineNum + self.lineWindow - 1)) # Need to check for distinct
-        numUniqueOccurances = 0
-        for i in self.itemStreams:
-            if self.findUnique(i, code, lines_to_check): numUniqueOccurances += 1
-            if numUniqueOccurances >= self.minRequired - 1: return True # Since first item is implicitly counted
-        return False
-    
-    def findUnique(self, item, code, lines_to_check):
-        # Checks if next search term is found
-        entries = copy.deepcopy(item) 
-        try:
-            entry = entries.pop()
-        except:
-            return False
+                book_code, lineNum = entry[0], entry[1]
+                lines_to_check = list(range(lineNum, lineNum + self.lineWindow))
+                self.numUniqueOccurances = 0
+                
+                if self.hasMinDistinctHits(book_code,lines_to_check) and entry not in self.hits:# Checks for duplicates
+                    self.itemStreams = items
+                    self.hits.append(entry)
+                    return entry
+                else:
+                    entry = item.pop()
+                    if entry == None: break
 
-        while entry != None:
-            if entry[0] == code and entry[1] in lines_to_check: 
-                return True
-            entry = entries.pop()
+    def hasMinDistinctHits(self,book_code, lines_to_check)->bool:
+        items_inner = copy.deepcopy(self.originalItemStreams)
+
+        for item in items_inner:
+            curr_entry = item.pop()
+            
+            while curr_entry != None:
+                if curr_entry[0] == book_code and curr_entry[1] in lines_to_check: 
+                    self.numUniqueOccurances += 1
+                    break
+                else:
+                    curr_entry = item.pop()
+        if self.numUniqueOccurances >= self.minRequired: return True
         return False
+
 
 def create_query(words_to_find):
+    '''Helps to test '''
     query = []
     for i in words_to_find:
         a = index_build.indexEntryFor(i)
         query.append(ItemStream(a))
     return query
     
-test_words  = ['woke','where']
+test_words  = ['friends','romans','countrymen']
 
+lineWindow = 5
+minRequired = 2
+numHits = 20
 query = create_query(test_words)
-lineWindow = 1
-minRequired = 1
-numHits = 3
 
 H = HitStream(query, lineWindow, minRequired)
 print(test_words)
